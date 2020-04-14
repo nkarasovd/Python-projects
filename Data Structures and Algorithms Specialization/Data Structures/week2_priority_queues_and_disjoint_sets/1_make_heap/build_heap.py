@@ -1,7 +1,7 @@
 # python3
 
 
-def build_heap(data):
+def build_heap_naive(data):
     """Build a heap from ``data`` inplace.
 
     Returns a sequence of swaps performed by the algorithm.
@@ -19,6 +19,25 @@ def build_heap(data):
                 swaps.append((i, j))
                 data[i], data[j] = data[j], data[i]
     return swaps
+
+
+def build_heap(data):
+    size = len(data)
+    for i in range(size // 2, -1, -1):
+        swift_down(i, size)
+
+
+def swift_down(i, size):
+    max_index = i
+    l = left_child(i)
+
+
+def left_child(i):
+    pass
+
+
+def right_child(i):
+    pass
 
 
 def main():
