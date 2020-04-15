@@ -21,23 +21,36 @@ def build_heap_naive(data):
     return swaps
 
 
-def build_heap(data):
-    size = len(data)
-    for i in range(size // 2, -1, -1):
-        swift_down(i, size)
+class Heap:
+    def __init__(self, data):
+        self.data = data
+        self.size = len(self.data)
+        self.n_swap = 0
+        self.swaps = []
 
+    def build_heap(self):
+        for i in range(self.size // 2, -1, -1):
+            self.swift_down(i)
 
-def swift_down(i, size):
-    max_index = i
-    l = left_child(i)
+    def left_child(self, i):
+        return 2 * i + 1
 
+    def right_child(self, i):
+        return 2 * i + 2
 
-def left_child(i):
-    pass
-
-
-def right_child(i):
-    pass
+    def swift_down(self, i):
+        max_index = i
+        l = self.left_child(i)
+        if l < self.size and self.data[l] < self.data[max_index]:
+            max_index = l
+        r = self.right_child(i)
+        if r < self.size and self.data[r] < self.data[max_index]:
+            max_index = r
+        if i != max_index:
+            self.data[i], self.data[max_index] = self.data[max_index], self.data[i]
+            self.n_swap += 1
+            self.swaps.append((i, max_index))
+            self.swift_down(max_index)
 
 
 def main():
@@ -45,10 +58,11 @@ def main():
     data = list(map(int, input().split()))
     assert len(data) == n
 
-    swaps = build_heap(data)
+    h = Heap(data)
+    h.build_heap()
+    print(h.n_swap)
 
-    print(len(swaps))
-    for i, j in swaps:
+    for i, j in h.swaps:
         print(i, j)
 
 
