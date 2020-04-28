@@ -17,6 +17,7 @@ class Node:
             self.count += 1
             return self.next[self.count - 1]
         else:
+            self.count = 0
             raise StopIteration
 
     def __iter__(self):
@@ -68,7 +69,7 @@ def build_suffix_tree_util(current_node, current_suffix):
 
 def iter(tree, result):
     count = 0
-    for el in tree.next:
+    for el in tree:
         if '#' in el.label and len(el.next) == 0:
             count += 1
     if count == len(tree.next) and len(tree.next) != 0:
@@ -77,8 +78,7 @@ def iter(tree, result):
         else:
             result.append(tree.path)
     else:
-        tree.count = 0
-        for el in tree.next:
+        for el in tree:
             if '#' in el.label and len(el.next) == 0:
                 result.append(el.path + el.label[0])
             else:
@@ -114,7 +114,7 @@ def solve(p, q):
             res_new.append(el)
 
     res_new.sort(key=lambda x: len(x))
-    
+
     for el in res_new:
         if el not in q:
             return el
