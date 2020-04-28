@@ -31,7 +31,7 @@ def find(old_edge, current_suffix):
     return -1
 
 
-def build_suffix_tree_util(current_node, current_suffix, result):
+def build_suffix_tree_util(current_node, current_suffix):
     first_symbol = current_suffix[0]
     node = None
 
@@ -42,9 +42,8 @@ def build_suffix_tree_util(current_node, current_suffix, result):
 
     if node is None:
         new_node = Node(current_suffix)
-        new_node.path += current_node.path + current_node.label + new_node.label
+        new_node.path = current_node.path + current_node.label
         current_node.next.append(new_node)
-        result.append(current_suffix)
     else:
         edge_label = node.label
         i = find(edge_label, current_suffix)
@@ -52,36 +51,38 @@ def build_suffix_tree_util(current_node, current_suffix, result):
         if i != -1:
             head, tail = edge_label[:i], edge_label[i:]
 
+            node.label = head
+
             node_tail = Node(tail)
             node_tail.next.extend(node.next)
-            node_tail.path += node.path + node.label
+            node_tail.path = node.path + node.label
+            for el in node_tail.next:
+                el.path = node_tail.path + node_tail.label
 
-            node.label = head
             new_node = Node(current_suffix[i:])
-            new_node.path += node.path + node.label
+            new_node.path = node.path + node.label
             node.next = [node_tail, new_node]
-
-            result.extend([head, tail, current_suffix[i:]])
-            result.remove(edge_label)
         else:
-            build_suffix_tree_util(node, current_suffix[len(edge_label):], result)
+            build_suffix_tree_util(node, current_suffix[len(edge_label):])
 
 
-def iter(tree, result, string):
+def iter(tree, result):
     count = 0
-    for el in tree:
+    for el in tree.next:
         if '#' in el.label and len(el.next) == 0:
             count += 1
-    if count == len(tree.next):
-        result.append(tree.path)
+    if count == len(tree.next) and len(tree.next) != 0:
+        if tree.path == '':
+            result.append(tree.label)
+        else:
+            result.append(tree.path)
     else:
         tree.count = 0
-        for el in tree:
+        for el in tree.next:
             if '#' in el.label and len(el.next) == 0:
                 result.append(el.path + el.label[0])
             else:
-                string += el.label
-                iter(el, result, string)
+                iter(el, result)
 
 
 def build_suffix_tree(text):
@@ -91,26 +92,32 @@ def build_suffix_tree(text):
     substrings of the text) in any order.
     """
     tree = Node()
-    result = []
     for i in range(len(text)):
         current_suffix = text[i:]
         current_node = tree
-        build_suffix_tree_util(current_node, current_suffix, result)
+        build_suffix_tree_util(current_node, current_suffix)
 
     result = []
-    string = ''
-    iter(tree, result, string)
-    # for el in tree:
-    #     string = el.label
-    #     iter(tree, result, string)
+
+    iter(tree, result)
 
     return result
 
 
 def solve(p, q):
     result = build_suffix_tree(p + '#' + q + '$')
-    result.sort(key=lambda x: len(x))
-    return result
+    res_new = []
+
+    for el in result:
+        el = el.replace('#', '')
+        if el != '':
+            res_new.append(el)
+
+    res_new.sort(key=lambda x: len(x))
+    
+    for el in res_new:
+        if el not in q:
+            return el
 
 
 if __name__ == '__main__':
@@ -118,5 +125,4 @@ if __name__ == '__main__':
     q = sys.stdin.readline().strip()
 
     ans = solve(p, q)
-    print("\n".join(ans))
-    # sys.stdout.write(ans + '\n')
+    sys.stdout.write(ans + '\n')
