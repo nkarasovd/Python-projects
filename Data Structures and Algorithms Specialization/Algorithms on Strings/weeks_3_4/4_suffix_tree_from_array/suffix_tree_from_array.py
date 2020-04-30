@@ -2,6 +2,34 @@
 import sys
 
 
+class SuffixTreeNode:
+    def __init__(self, children, parent=None, string_depth=0, edge_start=-1, edge_end=-1):
+        self.children = children
+        self.parent = parent
+        self.string_depth = string_depth
+        self.edge_start = edge_start
+        self.edge_end = edge_end
+
+
+def create_new_leaf(node, s, suffix):
+    leaf = SuffixTreeNode(children=dict(), parent=node, string_depth=len(s) - suffix,
+                          edge_start=suffix + node.string_depth, edge_end=len(text) - 1)
+    node.children[s[leaf.edge_start]] = leaf
+    return leaf
+
+
+def break_edge(node, s, start, offset):
+    start_char = s[start]
+    mid_char = s[start + offset]
+
+    mid_node = SuffixTreeNode(dict(), node, node.string_depth + offset, start, start + offset - 1)
+    mid_node.children[mid_char] = node.children[start_char]
+    node.children[start_char].parent = mid_node
+    node.children[start_char] = mid_node
+    mid_node.children[mid_char].edge_start += offset
+    return mid_node
+
+
 def suffix_array_to_suffix_tree(sa, lcp, text):
     """
     Build suffix tree of the string text given its suffix array suffix_array
@@ -19,9 +47,28 @@ def suffix_array_to_suffix_tree(sa, lcp, text):
     (corresponding to the root node), and it should be the first edge in the list (because
     it has the smallest first character of all edges outgoing from the root).
     """
-    tree = {}
+
     # Implement this function yourself
-    return tree
+    root = SuffixTreeNode(children=dict())
+
+    lcp_prev = 0
+    cur_node = root
+
+    for i in range(len(text)):
+        suffix = sa[i]
+        while cur_node.string_depth > lcp_prev:
+            cur_node = cur_node.parent
+        if cur_node.string_depth == lcp_prev:
+            cur_node = create_new_leaf(cur_node, text, suffix)
+        else:
+            edge_start = sa[i - 1] + cur_node.string_depth
+            offset = lcp_prev - cur_node.string_depth
+            mid_node = break_edge(cur_node, text, edge_start, offset)
+            cur_node = create_new_leaf(mid_node, text, suffix)
+        if i < len(text) - 1:
+            lcp_prev = lcp[i]
+
+    return root
 
 
 if __name__ == '__main__':
@@ -31,7 +78,6 @@ if __name__ == '__main__':
     print(text)
     # Build the suffix tree and get a mapping from 
     # suffix tree node ID to the list of outgoing Edges.
-    tree = suffix_array_to_suffix_tree(sa, lcp, text)
     """
     Output the edges of the suffix tree in the required order.
     Note that we use here the contract that the root of the tree
@@ -53,15 +99,16 @@ if __name__ == '__main__':
             OutputEdges(tree, edge[0]);
     
     """
-    stack = [(0, 0)]
+    root = suffix_array_to_suffix_tree(sa, lcp, text)
+    stack = [(root, 0)]
     result_edges = []
     while len(stack) > 0:
-      (node, edge_index) = stack[-1]
-      stack.pop()
-      if not node in tree:
-        continue
-      edges = tree[node]
-      if edge_index + 1 < len(edges):
-        stack.append((node, edge_index + 1))
-      print("%d %d" % (edges[edge_index][1], edges[edge_index][2]))
-      stack.append((edges[edge_index][0], 0))
+        (node, edge_index) = stack[-1]
+        stack.pop()
+        if 0 == len(node.children):
+            continue
+        edges = sorted(node.children.keys())
+        if edge_index + 1 < len(edges):
+            stack.append((node, edge_index + 1))
+        print("%d %d" % (node.children[edges[edge_index]].edge_start, node.children[edges[edge_index]].edge_end + 1))
+        stack.append((node.children[edges[edge_index]], 0))
